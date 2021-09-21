@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Touch Tracker Marker</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+<style type="text/css">
+body,html { margin: 0px; padding: 0px; overflow:hidden; }
+</style>
+</head>
+<body onresize="resize()" onload="resize()">
+<img id=backimg style="z-index:-1; top:0px; left:0px; positon:absolute; pointer-events:none;" src="ctrl.svg">
+<canvas id="canvas" width=100% height=100% style="top:0px; left:0px; position: absolute ;"></canvas>
+<script type="text/javascript">
+
+canvas  = document.getElementById('canvas');
+backimg = document.getElementById('backimg');
+
+function resize() {
+    // used when a screen dimensions change
+    // e.g. when screen oriantation on a mobile is changed
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    backimg.width = window.innerWidth;
+    backimg.height = window.innerHeight;
+}
+resize();
+
+//------------------------------------------------
+// cookies 
+
+function setCookie(cvalue) {
+  var d = new Date();
+  d.setTime(d.getTime() + (5 * 60 * 1000));
+  var expires = "expires="+d.toUTCString();
+  document.cookie = "eyescontrol=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie() {
+  var name = "eyescontrol=";
+  var ca = document.cookie.split(';');
+  for(var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+vals="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+idlen=16;
+
+// generate a random cookie UID
+
+var UID = getCookie();
+if( UID == "" ) {
+    for (i=0;i<idlen;i++) { UID = UID + vals.substr(Math.trunc(Math.random()*vals.length),1) }
+    setCookie(UID);
+} 
+
+//------------------------------------------------
+// capture websockets link
+// it assumes the same host and port
+
+if( location.search == "" ) {
+    wslink="://"+window.location.hostname+":"+window.location.port+"/send?s="+UID;
+} else {
+    wslink="://"+window.location.hostname+":"+window.location.port+"/send"+location.search+"&s="+UID;
+}
+if (window.location.protocol == "https:") {
+    wslink="s"+wslink;
+}
+wslink="ws"+wslink;
+console.log("wslink = "+wslink);
+
+//------------------------------------------------
+// websocket connection
+
+var ws = new WebSocket(wslink);
+ws.onmessage = function(e) {
+	console.log(event.data);
+}
+ws.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
+
+//------------------------------------------------
+// Variables
+
+tickcount=0;
+frametime=100;
+var canvas;
+var ctx;
+var w = 0;
+var h = 0;
+
+var timer;
+var updateStarted = false;
+var touches = [];
+
+var controller = { eyex:0 , eyey:0 , lid:0 , sent:false };
+
+//------------------------------------------------
+// update() is run every 'frametime' milliseconds
+// it checks position of touch points and sends
+// updates to the server when they occur
+
+function update() {
+
+    // ensure does not run multiple time in parallel
+	if (updateStarted) return;
+	updateStarted = true;
+
+    // resize window to ensure pick up on current 
+    // if phone turned
+
+    resize()
+	var nw = window.innerWidth;
+	var nh = window.innerHeight;
+	if ((w != nw) || (h != nh)) {
+		w = nw;
+		h = nh;
+		canvas.style.width = w+'px';
+		canvas.style.height = h+'px';
+		canvas.width = w;
+		canvas.height = h;
+	}
+	ctx.clearRect(0, 0, w, h);
+
+    // Loop through each of the current active touches 
+    // and based on position transalte to eye control input
+    // (if more than one for same control surface then last one
+    //  will superceed previous ones) 
+
+	var i, len = touches.length; 
+	tickcount++;
+	for ( i=0 ; i<len ; i++ ) {
+
+		var touch = touches[i];
+   		var px = touch.pageX;
+   		var py = touch.pageY;
+	
+        // draw a touch circle on the screen 
+        // (helps with debuggging and shows user where touched)
+		ctx.beginPath();
+		ctx.arc(px, py, 20, 0, 2*Math.PI, true);
+		ctx.fillStyle = "rgba(0, 0, 200, 0.2)";
+		ctx.fill();
+		ctx.lineWidth = 2.0;
+		ctx.strokeStyle = "rgba(0, 0, 200, 0.8)";
+		ctx.stroke();
+
+        // process touch input into controller coardinates
+        var splitratio=0.67
+        var py=Math.round(((py/nh)*200)-100);
+        if( (px/nw) < splitratio ) {
+
+            // LEFT - eyeball
+            // touch point is on the control side for the
+            // eyeball, covert to location and store
+            px=Math.round((((px/nw)/splitratio)*200)-100);
+            if( px != controller.eyex || py != controller.eyey ) {
+                controller.eyex=px
+                controller.eyey=py
+                controller.sent=false
+            }
+
+        } else {
+
+            // RIGHT - eyelid
+            // touch point is on the control side for the
+            // eyelid, covert to location and store
+            if ( py != controller.lid ) {
+                controller.lid=py
+                controller.sent=false
+            }
+        }
+	}
+
+    // Every 5000ms or when the controller gets new input 
+    // send the updated control data 'controller' object
+    // to the server - every 5 seconds keeps connection
+    // alive and lets us know page is not sleeping or
+    // navigated away from
+
+	if( (tickcount*frametime) > 5000 || controller.sent == false ) {
+		ws.send(JSON.stringify(controller));
+		console.log("ws.send('"+JSON.stringify(controller)+"');");
+		tickcount=0;
+        controller.sent=true;
+	}
+
+	updateStarted = false;
+}
+
+ctx = canvas.getContext('2d');
+timer = setInterval(update, frametime);
+
+// Track touch screen events
+
+canvas.addEventListener('touchend', function() {
+	ctx.clearRect(0, 0, w, h);
+});
+
+canvas.addEventListener('touchmove', function(event) {
+ 		event.preventDefault();
+ 		touches = event.touches;
+});
+
+canvas.addEventListener('touchstart', function(event) {
+ 		console.log('start');
+});
+
+</script>
+</body>
+</html>
+
