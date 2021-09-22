@@ -111,7 +111,7 @@ var controller = { eyex:0 , eyey:0 , lid:0 , sent:false };
 function update() {
 
     // ensure does not run multiple time in parallel
-	if (updateStarted) return;
+	if (updateStarted || ws.readyState != 1 ) return;
 	updateStarted = true;
 
     // resize window to ensure pick up on current 
@@ -197,6 +197,7 @@ function update() {
 }
 
 ctx = canvas.getContext('2d');
+update()
 timer = setInterval(update, frametime);
 
 // Track touch screen events
