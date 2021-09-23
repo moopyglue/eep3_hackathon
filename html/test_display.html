@@ -23,7 +23,7 @@ var ws_send = new WebSocket(wslink_send);
 var ws_get = new WebSocket(wslink_get);
 
 ws_get.onmessage = function(e) {
-	console.log(event.data);
+	console.log("onmessage: "+event.data);
 }
 
 ws_send.onerror = function (error) {

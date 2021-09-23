@@ -86,9 +86,9 @@ func main() {
 	listenPort := "6001"
 
 	http.HandleFunc("/controller_send", controllerReader)
-	http.HandleFunc("/controller_get", displayWriter)
+	http.HandleFunc("/controller_get", controllerWriter)
 	http.HandleFunc("/display_send", displayReader)
-	http.HandleFunc("/display_get", controllerWriter)
+	http.HandleFunc("/display_get", displayWriter)
 	http.Handle("/", http.FileServer(http.Dir("./html/")))
 
 	fmt.Printf("Starting on Port:%s\n", listenPort)
