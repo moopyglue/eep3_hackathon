@@ -60,7 +60,7 @@ func controllerWriter(w http.ResponseWriter, r *http.Request) {
 
 func _writeMessage(conn websocket.Conn, channel chan string) {
 	for {
-		message := <-display_controller_channel
+		message := <-channel
 		var err = conn.WriteMessage(1, []byte(message))
 		if err != nil {
 			fmt.Println(err)

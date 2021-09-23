@@ -10,10 +10,10 @@ body,html { margin: 0px; padding: 0px; overflow:hidden; }
 
 <script>
 
-wslink_send="://"+window.location.hostname+":"+window.location.port+"/controller_send?s=uid";
+wslink_send="ws://"+window.location.hostname+":"+window.location.port+"/controller_send?s=uid";
 console.log("wslink_send = "+wslink_send);
 
-wslink_get="://"+window.location.hostname+":"+window.location.port+"/controller_get?s=uid";
+wslink_get="ws://"+window.location.hostname+":"+window.location.port+"/controller_get?s=uid";
 console.log("wslink_get = "+wslink_get);
 
 //------------------------------------------------
@@ -29,6 +29,7 @@ ws_get.onmessage = function(e) {
 ws_send.onerror = function (error) {
   console.log('WebSocket Error ' + error);
 };
+
 ws_get.onerror = function (error) {
   console.log('WebSocket Error ' + error);
 };
