@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+<style type="text/css">
+body,html { margin: 0px; padding: 0px; overflow:hidden; }
+</style>
+</head>
+<body padding=50>
+
+<script>
+
+wslink_send="://"+window.location.hostname+":"+window.location.port+"/controller_send?s=uid";
+console.log("wslink_send = "+wslink_send);
+
+wslink_get="://"+window.location.hostname+":"+window.location.port+"/controller_get?s=uid";
+console.log("wslink_get = "+wslink_get);
+
+//------------------------------------------------
+// websocket connection
+
+var ws_send = new WebSocket(wslink_send);
+var ws_get = new WebSocket(wslink_get);
+
+ws_get.onmessage = function(e) {
+	console.log(event.data);
+}
+
+ws_send.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
+ws_get.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
+
+</script>
+
+<a href="#" onclick="ws_send.send(JSON.stringify( { controller:'clicked' } ));">send</a>
+
+</body>
+</html>
+
