@@ -66,9 +66,9 @@ if( UID == "" ) {
 // it assumes the same host and port
 
 if( location.search == "" ) {
-    wslink="://"+window.location.hostname+":"+window.location.port+"/send?s="+UID;
+    wslink="://"+window.location.hostname+":"+window.location.port+"/controller_send?s="+UID;
 } else {
-    wslink="://"+window.location.hostname+":"+window.location.port+"/send"+location.search+"&s="+UID;
+    wslink="://"+window.location.hostname+":"+window.location.port+"/controller_send"+location.search+"&s="+UID;
 }
 if (window.location.protocol == "https:") {
     wslink="s"+wslink;
