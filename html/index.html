@@ -1,28 +1,62 @@
-<html><head>
-<style>
-html, body { margin:50px ; background: #ccc; }
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+<style type="text/css">
+body,html { margin: 0px; padding: 0px; overflow:hidden; }
 </style>
 </head>
-<body>
-<h1>
-Halloween Project - Control spooky eyes with your smart phone
-</h1>
-<h2>
-<br>
-<a href=display.html>Left eye</a>
-<br><br>
-<a href=display.html>Right eye</a>
-<br><br>
-<h2><br><br>Instructions</h2>
-<p>
-Click on LEFT or RIGHT eye link above and you will be presented with a qrcode.
-</p><p>
-Scan the QR code with your smartphone camera and it will sugest a link, follow that link and it link the screen and smart phone together and it will bring up the control screen.
-</p><p>
-NOTES:
-<ul>
-<li>the control screen is desigend to be used with the phone in landscape mode.</li>
-<li>the eye only starts moving once you touch the touch control screen</li>
-</p>
+<body onresize="resize()" onload="resize()">
+<img id=backimg style="z-index:-1; top:0px; left:0px; positon:absolute; pointer-events:none;" src="info/product1.PNG">
+<canvas id="canvas" width=100% height=100% style="top:0px; left:0px; position: absolute ;"></canvas>
+<script type="text/javascript">
+        
+var canvas  = document.getElementById('canvas');
+var backimg = document.getElementById('backimg');
+
+window.oncontextmenu = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+};
+
+function resize() {
+    // used when a screen dimensions change
+    // e.g. when screen oriantation on a mobile is changed
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    backimg.width = window.innerWidth;
+    backimg.height = window.innerHeight;
+}
+resize();
+
+wslink_send="ws://"+window.location.hostname+":"+window.location.port+"/display_send?s=UID";
+console.log("wslink_send = "+wslink_send);
+
+wslink_get="ws://"+window.location.hostname+":"+window.location.port+"/display_get?s=UID";
+console.log("wslink_get = "+wslink_get);
+
+//------------------------------------------------
+// websocket connection
+
+var ws_send = new WebSocket(wslink_send);
+var ws_get = new WebSocket(wslink_get);
+
+ws_get.onmessage = function(e) {
+	console.log("onmessage: "+event.data);
+}
+
+ws_send.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
+ws_get.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
+
+</script>
+
+<a href="#" onclick="ws_send.send(JSON.stringify( { display:'clicked' } ));">send</a>
+
 </body>
 </html>
+
