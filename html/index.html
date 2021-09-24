@@ -7,9 +7,94 @@ body,html { margin: 0px; padding: 0px; overflow:hidden; }
 </style>
 </head>
 <body onresize="resize()" onload="resize()">
-<img id=backimg style="z-index:-1; top:0px; left:0px; positon:absolute; pointer-events:none;" src="info/product1.PNG">
+<img id=backimg style="z-index:-1; top:0px; left:0px; positon:absolute; pointer-events:none;" src="info/product0.PNG">
 <canvas id="canvas" width=100% height=100% style="top:0px; left:0px; position: absolute ;"></canvas>
 <script type="text/javascript">
+
+function get_epoc() {
+
+    var datetime = new Date()
+    var epoc = Math.round( datetime.getTime() + (datetime.getTimezoneOffset() * 60 * 1000) / 1000)  
+    return epoc
+
+}
+
+var pages = {
+
+    start: {
+        image:"info/start.PNG",
+        actions: [
+            { when:"connected", action: [ "page", "product1" ] }
+        ]
+    },
+    product1: {
+        image:"info/product0.PNG",
+        options: [
+            { x:100, y:230, name:"select1" },
+            { x:100, y:430, name:"select2" },
+            { x:100, y:500, name:"select3" },
+            { x:100, y:600, name:"select4" },
+            { x:100, y:700, name:"select5" }
+        ],
+        actions: [
+            { when:"select1", action: [ "page", "climate2" ] },
+            { when:"select4", action: [ "page", "product1" ] },
+            { when:"timeout", action: [ "page", "start" ] }
+        ]
+    },
+    product2: { 
+        image:"info/product1.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "start" ] }
+        ]
+    },
+    climate1: {
+        image:"info/climate1.PNG"
+    },
+    climate2: {
+        image:"info/climate2.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "climate3" ] },
+            { when:"anykey", action: [ "page", "climate3" ] }
+        ]
+    },
+    climate3: {
+        image:"info/climate3.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "climate4" ] },
+            { when:"anykey", action: [ "page", "climate4" ] }
+        ]
+    },
+    climate4: {
+        image:"info/climate4.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "climate5" ] },
+            { when:"anykey", action: [ "page", "climate5" ] }
+        ]
+    },
+    climate5: {
+        image:"info/climate5.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "climate6" ] },
+            { when:"anykey", action: [ "page", "climate6" ] }
+        ]
+    },
+    climate6: {
+        image:"info/climate6.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "climate7" ] },
+            { when:"anykey", action: [ "page", "climate7" ] }
+        ]
+    },
+    climate7: {
+        image:"info/climate7.PNG",
+        actions: [
+            { when:"shortpause", action: [ "page", "product1" ] },
+            { when:"anykey", action: [ "page", "product1" ] }
+        ]
+    }
+}
+
         
 var canvas  = document.getElementById('canvas');
 var backimg = document.getElementById('backimg');
@@ -30,14 +115,14 @@ function resize() {
 }
 resize();
 
+//------------------------------------------------
+// websocket connection
+
 wslink_send="ws://"+window.location.hostname+":"+window.location.port+"/display_send?s=UID";
 console.log("wslink_send = "+wslink_send);
 
 wslink_get="ws://"+window.location.hostname+":"+window.location.port+"/display_get?s=UID";
 console.log("wslink_get = "+wslink_get);
-
-//------------------------------------------------
-// websocket connection
 
 var ws_send = new WebSocket(wslink_send);
 var ws_get = new WebSocket(wslink_get);
@@ -53,9 +138,26 @@ ws_get.onerror = function (error) {
   console.log('WebSocket Error ' + error);
 };
 
-</script>
+//------------------------------------------------
+// functions
 
-<a href="#" onclick="ws_send.send(JSON.stringify( { display:'clicked' } ));">send</a>
+function set_page(page_name) {
+
+    current_page="start"
+    backimg.src = pages[page_name].image
+    paged_loaded = get_epoc()
+    
+}
+
+function update() {
+
+}
+
+set_page("start")
+
+setInterval(update,100)
+
+</script>
 
 </body>
 </html>
